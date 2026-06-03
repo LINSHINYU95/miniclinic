@@ -17,6 +17,8 @@
         .status-BOOKED    { color: #F59E0B; font-weight: bold; }
         .status-COMPLETED { color: #10B981; font-weight: bold; }
         .status-CANCELLED { color: #94A3B8; }
+        .btn-complete { background: #10B981; color: white; padding: 4px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; margin-right: 5px; }
+        .btn-complete:hover { background: #059669; }
         .btn-cancel { background: #EF4444; color: white; padding: 4px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
         .btn-cancel:hover { background: #DC2626; }
     </style>
@@ -59,7 +61,11 @@
                           th:class="${'status-' + appt.status}">BOOKED</span>
                 </td>
                 <td>
-                    <!-- 僅顯示 BOOKED 狀態才有的取消按鈕 -->
+                    <!-- 僅顯示 BOOKED 狀態才有的按鈕 -->
+                    <button th:if="${appt.status == 'BOOKED'}"
+                            th:data-id="${appt.apptId}"
+                            class="btn-complete"
+                            onclick="completeAppointment(this)">看診完成</button>
                     <button th:if="${appt.status == 'BOOKED'}"
                             th:data-id="${appt.apptId}"
                             class="btn-cancel"
@@ -73,6 +79,28 @@
     </p>
 
     <script>
+    function completeAppointment(btn) {
+        const apptId = btn.getAttribute('data-id');
+        if (!confirm('確定此筆掛號已看診完成嗎？')) return;
+
+        fetch(`/api/appointments/${apptId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'COMPLETED' })
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('操作失敗，請確認您是否有權限修改此掛號。');
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('連線錯誤，請稍後再試。');
+        });
+    }
+
     function cancelAppointment(btn) {
         const apptId = btn.getAttribute('data-id');
         if (!confirm('確定要取消這筆掛號嗎？')) return;
